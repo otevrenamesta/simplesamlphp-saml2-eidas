@@ -1,0 +1,28 @@
+language: php
+
+php:
+  - 7.2
+  - 7.3
+  - '7.4snapshot'
+
+env:
+  - COMMAND="composer install"
+  - COMMAND="composer update"
+
+matrix:
+  allow_failures:
+    - php: '7.4snapshot'
+  fast_finish: true
+  include:
+    - php: 7.2
+    - php: 7.3
+    - php: '7.4snapshot'
+
+before_script:
+  - composer install --no-interaction
+  - vendor/bin/phpunit --version
+  - vendor/bin/phpunit --dump-xdebug-filter build/xdebug-filter.php
+
+script:
+  - vendor/bin/phpunit
+  -
