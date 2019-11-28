@@ -31,7 +31,8 @@
     "simplesamlphp/saml2": "^4.1",
     "ext-zlib": "*",
     "ext-dom": "*",
-    "ext-openssl": "*"
+    "ext-openssl": "*",
+    "php": ">=7.2"
   },
   "autoload": {
     "psr-4": {
