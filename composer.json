@@ -1,0 +1,46 @@
+{
+  "name": "otevrenamesta/simplesamlphp-saml2-eidas",
+  "description": "PHP Library wrapped around simplesamlphp/saml2 providing helpers for eIDAS relevant integration",
+  "type": "library",
+  "keywords": [
+    "saml",
+    "saml2",
+    "php",
+    "eidas",
+    "eid",
+    "simplesamlphp"
+  ],
+  "homepage": "https://nia.otevrenamesta.cz/",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Marek Sebera",
+      "homepage": "http://github.com/smarek"
+    },
+    {
+      "name": "Otevřená Města",
+      "homepage": "http://otevrenamesta.cz/"
+    }
+  ],
+  "support": {
+    "issues": "https://github.com/otevrenamesta/simplesamlphp-saml2-eidas/issues",
+    "docs": "https://github.com/otevrenamesta/simplesamlphp-saml2-eidas/wiki",
+    "source": "https://github.com/otevrenamesta/simplesamlphp-saml2-eidas"
+  },
+  "require": {
+    "simplesamlphp/saml2": "^4.1",
+    "ext-zlib": "*",
+    "ext-dom": "*",
+    "ext-openssl": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "OMSAML2\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "OMSAML2\\": "tests/"
+    }
+  }
+}
