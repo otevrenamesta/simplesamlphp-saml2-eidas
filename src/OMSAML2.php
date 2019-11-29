@@ -95,10 +95,10 @@ class OMSAML2
         if (!empty($url)) {
             self::setIdPMetadataUrl($url);
         }
-        if (empty(self::getIdPMetadataUrl())) {
-            throw new Exception("IdP Metadata URL not yet configured");
-        }
         if (empty(self::$idp_metadata_contents)) {
+            if (empty(self::getIdPMetadataUrl())) {
+                throw new Exception("IdP Metadata URL not yet configured");
+            }
             $idp_metadata_contents_fresh = file_get_contents(self::getIdPMetadataUrl());
             self::setIdPMetadataContents($idp_metadata_contents_fresh);
         }
@@ -112,6 +112,7 @@ class OMSAML2
      */
     public static function setIdPMetadataContents(?string $contents)
     {
+        $contents = trim($contents);
         self::$idp_metadata_contents = empty($contents) ? null : $contents;
     }
 
@@ -132,6 +133,7 @@ class OMSAML2
      */
     public static function setIdPMetadataUrl(string $url): void
     {
+        $url = trim($url);
         if ($url != self::$idp_metadata_url) {
             // empty metadata contents cache if URL changes
             self::$idp_metadata_contents = null;

@@ -13,11 +13,33 @@ final class BaseTest extends TestCase
         $this->expectException(Exception::class);
         $this->expectExceptionMessage("IdP Metadata URL not yet configured");
         OMSAML2::getIdPMetadataContents();
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage("IdP Metadata URL not yet configured");
+        OMSAML2::getIdpDescriptor();
     }
 
     public function testEmptyUnconfiguredUrl(): void
     {
-        $this->assertEmpty(OMSAML2::getIdPMetadataUrl());
+        $this->assertNull(OMSAML2::getIdPMetadataUrl());
+        OMSAML2::setIdPMetadataUrl("");
+        $this->assertNull(OMSAML2::getIdPMetadataUrl());
+        OMSAML2::setIdPMetadataUrl(" ");
+        $this->assertNull(OMSAML2::getIdPMetadataUrl());
+    }
+
+    public function testEmptyContents(): void {
+        OMSAML2::setIdPMetadataContents(" ");
+        $this->expectException(Exception::class);
+        OMSAML2::getIdPMetadataContents();
+
+        OMSAML2::setIdPMetadataContents("a");
+        $this->assertNotEmpty(OMSAML2::getIdPMetadataContents());
+    }
+
+    public function testTypeErrors(): void {
+        $this->expectException(TypeError::class);
+        OMSAML2::setIdPMetadataUrl(null);
     }
 
 }
