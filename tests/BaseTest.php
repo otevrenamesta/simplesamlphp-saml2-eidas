@@ -15,4 +15,9 @@ final class BaseTest extends TestCase
         OMSAML2::getIdPMetadataContents();
     }
 
+    public function testEmptyUnconfiguredUrl(): void
+    {
+        $this->assertEmpty(OMSAML2::getIdPMetadataUrl());
+    }
+
 }
