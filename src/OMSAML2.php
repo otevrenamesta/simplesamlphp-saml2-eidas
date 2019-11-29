@@ -46,9 +46,11 @@ class OMSAML2
         }
 
         $idp_sso_descriptor = false;
-        foreach ($idp_descriptor->getRoleDescriptor() as $role_descriptor) {
-            if ($role_descriptor instanceof IDPSSODescriptor) {
-                $idp_sso_descriptor = $role_descriptor;
+        if ($idp_descriptor instanceof EntityDescriptor) {
+            foreach ($idp_descriptor->getRoleDescriptor() as $role_descriptor) {
+                if ($role_descriptor instanceof IDPSSODescriptor) {
+                    $idp_sso_descriptor = $role_descriptor;
+                }
             }
         }
 
@@ -67,27 +69,28 @@ class OMSAML2
     }
 
     /**
-     * Returns EntityDescriptor instance or false, if metadata could not be fetched
+     * Returns EntityDescriptor instance or null, if metadata could not be fetched
      * throws exception in case of invalid or dangerous XML contents
      *
-     * @return EntityDescriptor|false
+     * @param string|null $metadata_string
+     * @return EntityDescriptor|null null if provided string or automatically retrieved string is empty
      * @throws Exception
      */
-    public static function getIdpDescriptor(): EntityDescriptor
+    public static function getIdpDescriptor(?string $metadata_string = null): ?EntityDescriptor
     {
         $metadata_string = self::getIdPMetadataContents();
         if (empty($metadata_string)) {
-            return false;
+            return null;
         }
         $metadata_dom = DOMDocumentFactory::fromString($metadata_string);
         return new EntityDescriptor($metadata_dom->documentElement);
     }
 
     /**
-     * Returns cached or freshly retrieved IdP metadata as a string, or false
+     * Returns cached or freshly retrieved IdP metadata as a string, or null
      *
      * @param string|null $url
-     * @return false|string
+     * @return null|string
      * @throws Exception
      */
     public static function getIdPMetadataContents(?string $url = null): ?string
@@ -110,7 +113,7 @@ class OMSAML2
      *
      * @param string $contents
      */
-    public static function setIdPMetadataContents(?string $contents)
+    public static function setIdPMetadataContents(?string $contents): void
     {
         $contents = trim($contents);
         self::$idp_metadata_contents = empty($contents) ? null : $contents;
@@ -144,7 +147,7 @@ class OMSAML2
     /**
      * Reset state of whole component to default
      */
-    public static function reset()
+    public static function reset(): void
     {
         self::$idp_metadata_contents = null;
         self::$idp_metadata_url = null;
