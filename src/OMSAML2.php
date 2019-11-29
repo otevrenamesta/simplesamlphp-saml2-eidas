@@ -142,6 +142,15 @@ class OMSAML2
     }
 
     /**
+     * Reset state of whole component to default
+     */
+    public static function reset()
+    {
+        self::$idp_metadata_contents = null;
+        self::$idp_metadata_url = null;
+    }
+
+    /**
      * Returns associative array of found Logout URLs
      * keys are binding constants, such as Constants::BINDING_HTTP_REDIRECT
      *
