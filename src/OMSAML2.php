@@ -78,9 +78,11 @@ class OMSAML2
      */
     public static function getIdpDescriptor(?string $metadata_string = null): ?EntityDescriptor
     {
-        $metadata_string = self::getIdPMetadataContents();
         if (empty($metadata_string)) {
-            return null;
+            $metadata_string = self::getIdPMetadataContents();
+            if (empty($metadata_string)) {
+                return null;
+            }
         }
         $metadata_dom = DOMDocumentFactory::fromString($metadata_string);
         return new EntityDescriptor($metadata_dom->documentElement);
