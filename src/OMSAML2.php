@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace OMSAML2;
 
 use Exception;
+use RobRichards\XMLSecLibs\XMLSecurityKey;
 use SAML2\Constants;
 use SAML2\DOMDocumentFactory;
+use SAML2\SignedElement;
 use SAML2\XML\md\EntityDescriptor;
 use SAML2\XML\md\IDPSSODescriptor;
 
@@ -168,5 +170,54 @@ class OMSAML2
     public static function extractSSOLogoutUrls(?EntityDescriptor $idp_descriptor = null): array
     {
         return self::extractSSOUrls(true, $idp_descriptor);
+    }
+
+    /**
+     * Validates signed element (metadata, auth-response, logout-response) signature
+     *
+     * @param XMLSecurityKey $publicKey
+     * @param SignedElement|null $idp_descriptor if not provided, will be retrieved internally by configured URL
+     * @return bool
+     * @throws Exception
+     */
+    public static function validateMetadataSignature(XMLSecurityKey $publicKey, ?SignedElement $idp_descriptor = null): bool
+    {
+        if (empty($idp_descriptor)) {
+            $idp_descriptor = self::getIdpDescriptor();
+        }
+
+        return $idp_descriptor->validate($publicKey);
+    }
+
+    /**
+     * Creates public key for verifying RSA/SHA256 signature
+     *
+     * @param string $path absolute path to certificate file or URL from which it can be retrieved
+     * @param string $algorithm
+     * @param string $type
+     * @return XMLSecurityKey
+     * @throws Exception
+     */
+    public static function getPublicKeyFromCertificate(string $path, $algorithm = XMLSecurityKey::RSA_SHA256, $type = 'public'): XMLSecurityKey
+    {
+        $cert_data = file_get_contents($path);
+        $key = new XMLSecurityKey($algorithm, ['type' => $type]);
+        $key->loadKey($cert_data, false, true);
+        return $key;
+    }
+
+    /**
+     * @param string $path absolute path to key file or URL from which it can be retrieved
+     * @param string $algorithm
+     * @param string $type
+     * @return XMLSecurityKey
+     * @throws Exception
+     */
+    public static function getPrivateKeyFromFile(string $path, $algorithm = XMLSecurityKey::RSA_SHA256, $type = 'private'): XMLSecurityKey
+    {
+        $key_data = file_get_contents($path);
+        $key = new XMLSecurityKey($algorithm, ['type' => $type]);
+        $key->loadKey($key_data, false, false);
+        return $key;
     }
 }
