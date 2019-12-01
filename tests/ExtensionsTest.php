@@ -19,7 +19,11 @@ final class ExtensionsTest extends TestCase
 
     static function getDummyDOMElement(): DOMElement
     {
-        return DOMDocumentFactory::create()->createElement('root');
+        $xmlstring = <<<DOC
+<?xml version="1.0"?>
+<root></root>
+DOC;
+        return DOMDocumentFactory::fromString($xmlstring)->documentElement;
     }
 
     public function testSPType(): void
@@ -53,5 +57,44 @@ final class ExtensionsTest extends TestCase
         $this->assertEquals(3, count($exts->getRequestedAttributes()));
         $exts->addRequestedAttributeParams('Name', 'UriFormat', true, "18");
         $this->assertEquals(4, count($exts->getRequestedAttributes()));
+    }
+
+    public function testToXML(): void
+    {
+        $exts = new SamlpExtensions(self::getDummyDOMElement());
+        $exts->addAllDefaultAttributes();
+        $toxml = $exts->toXML();
+        $string_output = $toxml->ownerDocument->saveXML($toxml);
+
+        // has sptype
+        $this->assertStringContainsString('<eidas:SPType xmlns:eidas="http://eidas.europa.eu/saml-extensions">public</eidas:SPType>', $string_output);
+        // has correct number of RequestedAttribute elements of correct namespace
+        $this->assertEquals(count($exts->getAllDefaultAttributes()), count($toxml->getElementsByTagNameNS('http://eidas.europa.eu/saml-extensions', 'RequestedAttribute')));
+    }
+
+    /**
+     * Tests all possible incorrect cases with data from ${incorrectAttributesProvider}
+     *
+     * @dataProvider incorrectAttributesProvider
+     * @param $args
+     * @see          incorrectAttributesProvider
+     */
+    public function testAddAtrributeByArray_Incorrect($args): void
+    {
+        $exts = new SamlpExtensions(self::getDummyDOMElement());
+        $this->expectException(InvalidArgumentException::class);
+
+        $exts->addRequestedAttribute($args);
+    }
+
+    public function incorrectAttributesProvider(): array
+    {
+        return [
+            "Name not set" => [[]],
+            "Name not string" => [['Name' => 1]],
+            "NameFormat not string" => [['Name' => 'Value', 'NameFormat' => 1]],
+            "isRequired not boolean" => [['Name' => 'Value', 'isRequired' => "true"]],
+            "AttributeValue not scalar" => [['Name' => 'Value', 'AttributeValue' => ["key" => "value"]]]
+        ];
     }
 }

@@ -209,7 +209,7 @@ class SamlpExtensions
                 $attrElement->setAttribute('NameFormat', $attrArray['NameFormat']);
                 if (isset($attrArray['AttributeValue']) && (!empty($attrArray['AttributeValue']) || $attrArray['AttributeValue'] === false)) {
                     $attrValueElement = $doc->createElementNS('http://eidas.europa.eu/saml-extensions', 'eidas:AttributeValue');
-                    $attrValueElement->nodeValue = (string)$attrArray['AttributeValue'];
+                    $attrValueElement->nodeValue = (string) $attrArray['AttributeValue'];
                     $attrElement->appendChild($attrValueElement);
                 }
                 $requested_attributes->appendChild($attrElement);
