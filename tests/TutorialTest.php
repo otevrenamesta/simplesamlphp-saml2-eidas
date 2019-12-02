@@ -8,6 +8,7 @@ use SAML2\AuthnRequest;
 use SAML2\Compat\AbstractContainer;
 use SAML2\Compat\Ssp\Logger;
 use SAML2\Constants;
+use SAML2\DOMDocumentFactory;
 
 class TutorialTest extends TestCase
 {
@@ -97,8 +98,14 @@ hIHZxfevboDVljM9aHaE35vKSU9D0wE1ak1P9Q==
 
         $request_signed = OMSAML2::signDocument($extensions->toXML());
 
-        // test that signature was inserted successfully and corresponds to given certificate/public-key
-        $this->assertTrue((new AuthnRequest($request_signed))->validate(OMSAML2::getOwnCertificatePublicKey()));
+        // validate request signature
+        $request_copy = DOMDocumentFactory::fromString($request_signed->ownerDocument->saveXML($request_signed))->documentElement;
+        $this->assertTrue((new AuthnRequest($request_copy))->validate(OMSAML2::getOwnCertificatePublicKey()));
+
+        $sso_redirect_url = OMSAML2::getSSORedirectUrl($request_signed);
+
+        // create redirect URL
+        $this->assertIsString($sso_redirect_url);
     }
 
     private function getDummyContainer()

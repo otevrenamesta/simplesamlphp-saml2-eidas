@@ -39,8 +39,20 @@ class OMSAML2
     protected static $own_private_key = null;
 
     /**
-     * Returns associative array of found Login URLs
-     * keys are binding constants, such as Constants::BINDING_HTTP_POST
+     * Reset state of whole component to default
+     */
+    public static function reset(): void
+    {
+        self::$idp_metadata_contents = null;
+        self::$idp_metadata_url = null;
+        self::$own_private_key = null;
+        self::$own_certificate = null;
+        self::$idp_certificate = null;
+    }
+
+    /**
+     * Returns associative array of found Logout URLs
+     * keys are binding constants, such as Constants::BINDING_HTTP_REDIRECT
      *
      * @param EntityDescriptor|null $idp_descriptor
      * @return array
@@ -48,9 +60,9 @@ class OMSAML2
      * @see Constants
      *
      */
-    public static function extractSSOLoginUrls(?EntityDescriptor $idp_descriptor = null): array
+    public static function extractSSOLogoutUrls(?EntityDescriptor $idp_descriptor = null): array
     {
-        return self::extractSSOUrls(false, $idp_descriptor);
+        return self::extractSSOUrls(true, $idp_descriptor);
     }
 
     /**
@@ -167,30 +179,6 @@ class OMSAML2
     }
 
     /**
-     * Reset state of whole component to default
-     */
-    public static function reset(): void
-    {
-        self::$idp_metadata_contents = null;
-        self::$idp_metadata_url = null;
-    }
-
-    /**
-     * Returns associative array of found Logout URLs
-     * keys are binding constants, such as Constants::BINDING_HTTP_REDIRECT
-     *
-     * @param EntityDescriptor|null $idp_descriptor
-     * @return array
-     * @throws Exception
-     * @see Constants
-     *
-     */
-    public static function extractSSOLogoutUrls(?EntityDescriptor $idp_descriptor = null): array
-    {
-        return self::extractSSOUrls(true, $idp_descriptor);
-    }
-
-    /**
      * Validates signed element (metadata, auth-response, logout-response) signature
      *
      * @param XMLSecurityKey $publicKey
@@ -282,7 +270,7 @@ class OMSAML2
      * @param XMLSecurityKey|null $certificate
      * @return DOMElement
      */
-    public static function signDocument(DOMElement $document, XMLSecurityKey $privateKey = null, XMLSecurityKey $certificate = null)
+    public static function signDocument(DOMElement $document, XMLSecurityKey $privateKey = null, XMLSecurityKey $certificate = null): DOMElement
     {
         if (empty($privateKey)) {
             $privateKey = self::$own_private_key;
@@ -348,6 +336,46 @@ class OMSAML2
     public static function getOwnCertificatePublicKey(): XMLSecurityKey
     {
         return self::$own_certificate;
+    }
+
+    /**
+     * @param DOMElement $element
+     * @return string
+     * @throws Exception
+     */
+    public static function getSSORedirectUrl(DOMElement $element): string
+    {
+        return self::getSAMLRequestUrl($element, self::extractSSOLoginUrls()[Constants::BINDING_HTTP_REDIRECT]);
+    }
+
+    /**
+     * @param DOMElement $element
+     * @param $base_request_url
+     * @return string
+     */
+    public static function getSAMLRequestUrl(DOMElement $element, $base_request_url): string
+    {
+        $encoded_element = $element->ownerDocument->saveXML();
+        $encoded_element = gzdeflate($encoded_element);
+        $encoded_element = base64_encode($encoded_element);
+        $encoded_element = urlencode($encoded_element);
+
+        return $base_request_url . (parse_url($base_request_url, PHP_URL_QUERY) ? '&' : '?') . 'SAMLRequest=' . $encoded_element;
+    }
+
+    /**
+     * Returns associative array of found Login URLs
+     * keys are binding constants, such as Constants::BINDING_HTTP_POST
+     *
+     * @param EntityDescriptor|null $idp_descriptor
+     * @return array
+     * @throws Exception
+     * @see Constants
+     *
+     */
+    public static function extractSSOLoginUrls(?EntityDescriptor $idp_descriptor = null): array
+    {
+        return self::extractSSOUrls(false, $idp_descriptor);
     }
 
 
