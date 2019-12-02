@@ -17,7 +17,8 @@ This library is about simplifying development of PHP applications in need of eID
 ### Usage
 
   - (1) Get to know underlying library [simplesamlphp/saml2](https://github.com/simplesamlphp/saml2)
-  - (2) Implement your container (important methods are `generateId` and depending on your env, file storage methods and logging interface)
+  - (2) Install the library using composer `composer require otevrenamesta/simplesamlphp-saml2-eidas`
+  - (3) Implement your container (important methods are `generateId` and depending on your env, file storage methods and logging interface)
 
 ```php
 // sample generic container implementation
@@ -69,7 +70,7 @@ class CustomContainerInterface extends AbstractContainer {
 }
 ```
 
-  - (3.a) Use this library to create signed AuthRequest
+  - (4.a) Use this library to create signed AuthRequest
 
 ```php
 use OMSAML2\OMSAML2;
@@ -104,7 +105,7 @@ $sso_redirect_url = OMSAML2::getSSORedirectUrl($request_signed);
 // https://tnia.eidentita.cz/FPSTS/saml2/basic?SAMLRequest=1ZhtU%2BI6FMff%2BymY%2BtKBtMhjR9gpIAgCYnm4ypud0KZtpE1qkkLx09%2B0PIjuenXv7s6uM844PT3n5JeTk39SLr7EgZ9ZIcYxJTVFy6nKl%2FrJBYeBH%2BpGJDxioscIcZGRfoTr6YuaEjGiU8gx1wkMENeFpY%2BNQV%2FP51Q9ZFRQi%2FrKUch%2FR0DOERMSQMl0WzXla9FGRW2hFh3t3NGUzGxPJ32lB%2BcR6hIuIBHSpGrVrJbPqvmJVtDVqvybK5mWBMYEijTKEyLkOgCCYJhD2EZEYAFz1hNoj8aTMUj48mAh2SwlY%2BxRmpTwKEBsjNgKW2hq9p8zcRTmUAyD0Ec5iwbgwP%2FV2kV95dswpZ6WUk%2BhWf2NBBfg2OnC5voYuxI%2FYmhXQ5tvR5ex6%2FU6tz7PUeaCvKqqQK0C6WNz7J4q9ZNMZh%2BO7C5xaJqtCQkl2II%2BfkprMkDCo3bG8F3KsPCCN3JrQFOT3FkUW1lLK5BTBSQjPI%2BRIn44m1rYk2YDytAp4zDLPZgvlrZ5k6wmchBDxEKZqdmtKaeveiGdzoRBwh3KAv7y8V2EF8VCZIV8GiI7y%2FczkRg%2FlvC7FboA3zK2sCtb8gcrJctweqjPc5YZ9CNUb%2BYr7aezZbfs%2Bi1RHZad3qyydorXnp8fmZFlDy7pw3DWEPOgUEuJjoNTw6HU28dXPXNY3m0EPveGdwGfmP60nS9fgvNZ%2BQ6dG2sKqA%2BqgIjBw6x7NkePTbhwy0HQWore7Ea4jnnFz9TxvAVjNS7dDx9KMXDd8rCjRVcjz5jdr%2BebASuu2pVLc1OMbNskXqft3JubsluZPWLA85vuVX45Lrhq0Mj742p7OLuf3Xi9cWU%2BabnmZn6vGcbYwuGN02CDXmkuunewMyPanagsL9kmnjTu7zyGmw21OhJMvbGK%2Fcb5w%2FXUfpoUr8Z24QY9hIulof0DkRaXOl7BNUrjzm2MjTh%2BKoTqukr60bRBysOGWer1wxbE4fVVxyFWMdaum6umNbn0V%2BSxbziV2%2FnqCfeM6Zq1W2zkUGqui41O17FKZ3HR8JaN6ePtZtSDLV65mlO3VjuU%2FqjWJy%2BN9Z0a74QY2aksS30SKBaZJg1CyDBPlC7ABAdRsBedY7%2BmL0VKrnh913FSByHPoYjRUIpiBPrUAD5d75Tou5Hbd29w7CEvY4FIotZ8p1zpQIdGfz1sEiQ3zz5Gkqce%2Bng02YTo%2F6UIo4WPrQtwnGmf95ldCIYXkUA%2Fx%2FltvsxQHm8vNjYXlC1zLl0lieQBC6CLlAzmSSxmyK4pDvS5NCWRbSkZULxzXMqxEmvWSZ31iOFEIH6CyKIREWzTpDaSuwgz4f05wNelh4eVAul%2BgH4o7wOUgGbEpHwJw7YZ4vzzALdhgP1NkuLzMHfwCpFPgtyC4s938Xe3GRpA7P9lTJgbLrqRHwC%2FnGuPdaDZnm5aZS%2FNr17szd9O45e3yCj9100%2FBRz8G%2Bb%2B4TXhloeCBPr4u0TejjGXN0GtBHbmDbB8iAMun0kULD4XsZAH8OfhFQwmBwrE9t%2FDvHmHOfQoQX%2B6MT6%2B%2B3xo%2FU6FflNH%2BOEO%2B3xNPZiOf%2Byon%2FwL&param=2
 ```
 
-  - (3.b) Use this library to verify IdP metadata or SAMLResponse
+  - (4.b) Use this library to verify IdP metadata or SAMLResponse
 
 ```php
 use OMSAML2\OMSAML2;
@@ -128,3 +129,7 @@ And more, if you seek inspiration, look within [tests](https://github.com/otevre
 ### Disclaimer
 
 This library was developed and tested against [Czech IdP NIA](https://www.eidentita.cz/Home), and might not work with others IdPs or eIDAS nodes
+
+### Credits
+
+This library was developed by [Otevřená Města z.s.](https://otevrenamesta.cz/)
