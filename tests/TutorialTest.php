@@ -4,9 +4,9 @@ use OMSAML2\OMSAML2;
 use OMSAML2\SamlpExtensions;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use Psr\Log\Test\TestLogger;
 use SAML2\AuthnRequest;
 use SAML2\Compat\AbstractContainer;
-use SAML2\Compat\Ssp\Logger;
 use SAML2\Constants;
 use SAML2\DOMDocumentFactory;
 
@@ -113,7 +113,7 @@ hIHZxfevboDVljM9aHaE35vKSU9D0wE1ak1P9Q==
         return new class extends AbstractContainer {
             public function getLogger(): LoggerInterface
             {
-                return new Logger();
+                return new TestLogger();
             }
 
             public function generateId(): string

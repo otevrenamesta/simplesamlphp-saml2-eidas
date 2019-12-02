@@ -5,6 +5,8 @@ declare(strict_types=1);
 use OMSAML2\OMSAML2;
 use PHPUnit\Framework\TestCase;
 use RobRichards\XMLSecLibs\XMLSecurityKey;
+use SAML2\Compat\ContainerSingleton;
+use SAML2\Compat\MockContainer;
 use SAML2\Constants;
 use SAML2\XML\md\EntityDescriptor;
 
@@ -173,7 +175,8 @@ lBIgv8KvQ/v9/0Pag9j6VyVIh+QMGGWFBd4XDcrzOhPzfiGm7cZi
         $this->assertFalse(OMSAML2::validateSignature($pubkey, OMSAML2::getIdpDescriptor($this->test_url_contents)));
     }
 
-    public function testCreatePrivateKey() {
+    public function testCreatePrivateKey()
+    {
 
         $tempfile = tmpfile();
         fwrite($tempfile, $this->valid_privatekey_data);
@@ -258,12 +261,40 @@ lBIgv8KvQ/v9/0Pag9j6VyVIh+QMGGWFBd4XDcrzOhPzfiGm7cZi
         $this->assertNull(OMSAML2::getIdpDescriptor());
     }
 
-    public function testInvalidPrivateKeyData():void {
+    public function testInvalidPrivateKeyData(): void
+    {
+        ContainerSingleton::setContainer(new MockContainer());
         $this->assertFalse(OMSAML2::setOwnPrivateKeyData("invalid privkey content"));
     }
 
-    public function testInvalidCertificateData():void {
+    public function testInvalidCertificateData(): void
+    {
         $this->assertFalse(OMSAML2::setOwnCertificatePublicKey("invalid certificate content"));
+    }
+
+    public function testNullOnUnconfiguredCertificate(): void
+    {
+        OMSAML2::reset();
+        $this->assertNull(OMSAML2::getOwnCertificatePublicKey());
+    }
+
+    public function testNullOnUnconfiguredPrivateKey(): void
+    {
+        OMSAML2::reset();
+        $this->assertNull(OMSAML2::getOwnPrivateKey());
+    }
+
+    public function testValidateSignatureWithoutPubkeyParam(): void
+    {
+        OMSAML2::reset();
+        OMSAML2::setIdPMetadataUrl($this->test_url_1);
+        OMSAML2::setIdpCertificate(null, $this->nia_cert);
+        $this->assertTrue(OMSAML2::validateSignature());
+    }
+
+    public function testSetInvalidIdpCertificateData():void {
+        OMSAML2::reset();
+        $this->assertFalse(OMSAML2::setIdpCertificate(""));
     }
 
     public function testMetadataWithoutBinding(): void

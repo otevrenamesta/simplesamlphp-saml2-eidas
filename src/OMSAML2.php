@@ -182,17 +182,71 @@ class OMSAML2
      * Validates signed element (metadata, auth-response, logout-response) signature
      *
      * @param XMLSecurityKey $publicKey
-     * @param SignedElement|null $idp_descriptor if not provided, will be retrieved internally by configured URL
+     * @param SignedElement|null $idp_descriptor if not provided, EntityDescriptor (IdP metadata) will be retrieved internally by configured URL
      * @return bool
      * @throws Exception
      */
-    public static function validateSignature(XMLSecurityKey $publicKey, ?SignedElement $idp_descriptor = null): bool
+    public static function validateSignature(XMLSecurityKey $publicKey = null, ?SignedElement $idp_descriptor = null): bool
     {
         if (empty($idp_descriptor)) {
             $idp_descriptor = self::getIdpDescriptor();
         }
 
+        if (empty($publicKey)) {
+            $publicKey = self::getIdpCertificate();
+        }
+
         return $idp_descriptor->validate($publicKey);
+    }
+
+    /**
+     * Returns internally configured IdP certificate as XMLSecurityKey or null if not configured yet
+     *
+     * @return XMLSecurityKey|null
+     */
+    public static function getIdpCertificate(): ?XMLSecurityKey
+    {
+        return self::$idp_certificate;
+    }
+
+    /**
+     * @param string|null $certificate_url
+     * @param string|null $certificate_data
+     * @param string $algorithm
+     * @return bool
+     */
+    public static function setIdpCertificate(?string $certificate_url = null, ?string $certificate_data = null, $algorithm = XMLSecurityKey::RSA_SHA256): bool
+    {
+        try {
+            self::$idp_certificate = new XMLSecurityKey($algorithm, ['type' => 'public']);
+            self::$idp_certificate->loadKey(empty($certificate_data) ? file_get_contents($certificate_url) : $certificate_data, false, true);
+            self::$idp_certificate->encryptData('abcdef');
+            return true;
+        } catch (Exception $e) {
+            self::$idp_certificate = null;
+            ContainerSingleton::getInstance()->getLogger()->critical('setIdpCertificate failed: ' . $e->getMessage(), [$e]);
+            return false;
+        }
+    }
+
+    /**
+     * Returns stored certificate/public-key in form of XMLSecurityKey, or null if not configured
+     *
+     * @return null|XMLSecurityKey
+     */
+    public static function getOwnCertificatePublicKey(): ?XMLSecurityKey
+    {
+        return self::$own_certificate;
+    }
+
+    /**
+     * Returns stored private-key as XMLSecurityKey instance, or null if not configured
+     *
+     * @return null|XMLSecurityKey
+     */
+    public static function getOwnPrivateKey(): ?XMLSecurityKey
+    {
+        return self::$own_private_key;
     }
 
     /**
@@ -304,6 +358,7 @@ class OMSAML2
             return true;
         } catch (Exception $e) {
             self::$own_private_key = null;
+            ContainerSingleton::getInstance()->getLogger()->critical('setOwnPrivateKeyData failed: ' . $e->getMessage(), [$e]);
             return false;
         }
     }
@@ -321,21 +376,13 @@ class OMSAML2
         try {
             self::$own_certificate = new XMLSecurityKey($algorithm, ['type' => 'public']);
             self::$own_certificate->loadKey($certificate_pem_string, false, true);
+            self::$own_certificate->encryptData('abcdef');
             return true;
         } catch (Exception $e) {
             self::$own_certificate = null;
+            ContainerSingleton::getInstance()->getLogger()->critical('setOwnCertificatePublicKey failed: ' . $e->getMessage(), [$e]);
             return false;
         }
-    }
-
-    /**
-     * Returns stored certificate/public-key in form of XMLSecurityKey
-     *
-     * @return XMLSecurityKey
-     */
-    public static function getOwnCertificatePublicKey(): XMLSecurityKey
-    {
-        return self::$own_certificate;
     }
 
     /**
