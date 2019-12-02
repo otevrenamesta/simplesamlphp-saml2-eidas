@@ -4,6 +4,8 @@ namespace OMSAML2;
 
 use DOMElement;
 use InvalidArgumentException;
+use SAML2\AuthnRequest;
+use SAML2\DOMDocumentFactory;
 use SAML2\Utils;
 
 /**
@@ -69,10 +71,20 @@ class SamlpExtensions
      * will the samlp:Extensions with relevant data be added
      *
      * @param DOMElement $dom
+     * @param AuthnRequest|null $authnRequest
+     * @throws InvalidArgumentException
      */
-    public function __construct(DOMelement $dom)
+    public function __construct(DOMelement $dom = null, AuthnRequest $authnRequest = null)
     {
-        $this->dom = $dom;
+        if (empty($dom) && empty($authnRequest)) {
+            throw new InvalidArgumentException("You must provide DOMElement to append the data to, or AuthnRequest which will provide the DOMElement for you");
+        }
+        if (!empty($dom)) {
+            $this->dom = $dom;
+        }
+        if (!empty($authnRequest)) {
+            $this->dom = $authnRequest->toUnsignedXML();
+        }
     }
 
     public function getSPType(): string
@@ -209,7 +221,7 @@ class SamlpExtensions
                 $attrElement->setAttribute('NameFormat', $attrArray['NameFormat']);
                 if (isset($attrArray['AttributeValue']) && (!empty($attrArray['AttributeValue']) || $attrArray['AttributeValue'] === false)) {
                     $attrValueElement = $doc->createElementNS('http://eidas.europa.eu/saml-extensions', 'eidas:AttributeValue');
-                    $attrValueElement->nodeValue = (string) $attrArray['AttributeValue'];
+                    $attrValueElement->nodeValue = (string)$attrArray['AttributeValue'];
                     $attrElement->appendChild($attrValueElement);
                 }
                 $requested_attributes->appendChild($attrElement);
@@ -219,7 +231,7 @@ class SamlpExtensions
 
         $dom->appendChild($extensions);
 
-        return Utils::copyElement($dom);
+        return DOMDocumentFactory::fromString($dom->ownerDocument->saveXML($dom))->documentElement;
     }
 
     /**

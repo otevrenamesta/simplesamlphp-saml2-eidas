@@ -160,7 +160,7 @@ lBIgv8KvQ/v9/0Pag9j6VyVIh+QMGGWFBd4XDcrzOhPzfiGm7cZi
         $pubkey = OMSAML2::getPublicKeyFromCertificate(stream_get_meta_data($tempfile)['uri']);
 
         OMSAML2::setIdPMetadataContents($this->test_url_contents);
-        $this->assertFalse(OMSAML2::validateMetadataSignature($pubkey));
+        $this->assertFalse(OMSAML2::validateSignature($pubkey));
     }
 
     public function testCreatePublicKeyAndVerifySignature_2()
@@ -170,7 +170,7 @@ lBIgv8KvQ/v9/0Pag9j6VyVIh+QMGGWFBd4XDcrzOhPzfiGm7cZi
 
         $pubkey = OMSAML2::getPublicKeyFromCertificate(stream_get_meta_data($tempfile)['uri']);
 
-        $this->assertFalse(OMSAML2::validateMetadataSignature($pubkey, OMSAML2::getIdpDescriptor($this->test_url_contents)));
+        $this->assertFalse(OMSAML2::validateSignature($pubkey, OMSAML2::getIdpDescriptor($this->test_url_contents)));
     }
 
     public function testCreatePrivateKey() {
@@ -256,6 +256,14 @@ lBIgv8KvQ/v9/0Pag9j6VyVIh+QMGGWFBd4XDcrzOhPzfiGm7cZi
         OMSAML2::reset();
         OMSAML2::setIdPMetadataUrl("https://httpbin.org/bytes/0");
         $this->assertNull(OMSAML2::getIdpDescriptor());
+    }
+
+    public function testInvalidPrivateKeyData():void {
+        $this->assertFalse(OMSAML2::setOwnPrivateKeyData("invalid privkey content"));
+    }
+
+    public function testInvalidCertificateData():void {
+        $this->assertFalse(OMSAML2::setOwnCertificatePublicKey("invalid certificate content"));
     }
 
     public function testMetadataWithoutBinding(): void

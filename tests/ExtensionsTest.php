@@ -72,6 +72,11 @@ DOC;
         $this->assertEquals(count($exts->getAllDefaultAttributes()), count($toxml->getElementsByTagNameNS('http://eidas.europa.eu/saml-extensions', 'RequestedAttribute')));
     }
 
+    public function testIncorrectConstructorThrows():void{
+        $this->expectException(Exception::class);
+        new SamlpExtensions();
+    }
+
     /**
      * Tests all possible incorrect cases with data from ${incorrectAttributesProvider}
      *
