@@ -70,7 +70,7 @@ class CustomContainerInterface extends AbstractContainer {
 }
 ```
 
-  - (4.a) Use this library to create signed AuthRequest
+  - (4.a) Use this library to create signed AuthRequest with eIDAS RequestedAttributes and SPType
 
 ```php
 use OMSAML2\OMSAML2;
@@ -94,7 +94,9 @@ $request = OMSAML2::generateAuthRequest(
 $extensions = new SamlpExtensions(null, $request);
 // single RequestedAttribute Name="email" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri" isRequired="false" without AttributeValue
 $extensions->addRequestedAttributeParams('email');
-// you do not have to do this, public is default type of SeP within this library
+// single RequestedAttribute Name="http://www.stork.gov.eu/1.0/age" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri" isRequired="true" without AttributeValue
+$extensions->addRequestedAttributeParams('http://www.stork.gov.eu/1.0/age', 'urn:oasis:names:tc:SAML:2.0:attrname-format:uri', true);
+// you do not have to do this, public is default type of SeP within this library, allowed values are 'public' or 'private'
 $extensions->setSPType('public');
 
 // sign the samlp:AuthnRequest using private key set  in the beginning
