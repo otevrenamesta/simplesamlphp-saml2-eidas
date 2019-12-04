@@ -7,6 +7,7 @@ use InvalidArgumentException;
 use SAML2\AuthnRequest;
 use SAML2\DOMDocumentFactory;
 use SAML2\Utils;
+use SAML2\XML\Chunk;
 
 /**
  * Class implementing samlp(urn:oasis:names:tc:SAML:2.0:protocol):Extensions with (http://eidas.europa.eu/saml-extensions)
@@ -14,7 +15,7 @@ use SAML2\Utils;
  *
  * @package OMSAML2
  */
-class SamlpExtensions
+class SamlpExtensions extends Chunk
 {
     const NAME_FORMAT_URI = 'urn:oasis:names:tc:SAML:2.0:attrname-format:uri';
 
@@ -85,6 +86,7 @@ class SamlpExtensions
         if (!empty($authnRequest)) {
             $this->dom = $authnRequest->toUnsignedXML();
         }
+        parent::__construct($this->dom);
     }
 
     public function getSPType(): string
@@ -198,7 +200,7 @@ class SamlpExtensions
         ];
     }
 
-    public function toXML(): DOMElement
+    public function toXML(DOMElement $parent = null): DOMElement
     {
         // will throw TypeError on empty or non-compatible $this->dom value
         $dom = Utils::copyElement($this->dom);
