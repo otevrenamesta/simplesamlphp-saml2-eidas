@@ -91,7 +91,7 @@ $request = OMSAML2::generateAuthRequest(
         );
 
 // create eIDAS samlp:Extensions with 
-$extensions = new SamlpExtensions(null, $request);
+$extensions = new SamlpExtensions();
 // single RequestedAttribute Name="email" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri" isRequired="false" without AttributeValue
 $extensions->addRequestedAttributeParams('email');
 // single RequestedAttribute Name="http://www.stork.gov.eu/1.0/age" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri" isRequired="true" without AttributeValue
@@ -100,7 +100,7 @@ $extensions->addRequestedAttributeParams('http://www.stork.gov.eu/1.0/age', 'urn
 $extensions->setSPType('public');
 
 // sign the samlp:AuthnRequest using private key set  in the beginning
-$request_signed = OMSAML2::signDocument($extensions->toXML());
+$request_signed = OMSAML2::signDocument($extensions->toXML($request->toUnsignedXML()));
 // generate final user redirect URL with embedded SAMLRequest containing signed AuthnRequest
 $sso_redirect_url = OMSAML2::getSSORedirectUrl($request_signed);
 // example result of this action is url like this:
