@@ -92,11 +92,11 @@ hIHZxfevboDVljM9aHaE35vKSU9D0wE1ak1P9Q==
         // test that correct AuthnRequest was generated, no exception thrown
         $this->assertInstanceOf(AuthnRequest::class, $request);
 
-        $extensions = new SamlpExtensions(null, $request);
+        $extensions = new SamlpExtensions();
         $extensions->addAllDefaultAttributes();
         $extensions->setSPType('public');
 
-        $request_signed = OMSAML2::signDocument($extensions->toXML());
+        $request_signed = OMSAML2::signDocument($extensions->toXML($request->toUnsignedXML()));
 
         // validate request signature
         $request_copy = DOMDocumentFactory::fromString($request_signed->ownerDocument->saveXML($request_signed))->documentElement;

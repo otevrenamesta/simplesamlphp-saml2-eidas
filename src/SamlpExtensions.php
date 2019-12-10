@@ -3,8 +3,8 @@
 namespace OMSAML2;
 
 use DOMElement;
+use DOMNode;
 use InvalidArgumentException;
-use SAML2\AuthnRequest;
 use SAML2\DOMDocumentFactory;
 use SAML2\Utils;
 use SAML2\XML\Chunk;
@@ -63,48 +63,41 @@ class SamlpExtensions extends Chunk
         'Name' => 'http://schemas.eidentita.cz/moris/2016/identity/claims/idnumber'
     ];
 
-    private $dom = false;
+    /**@var string $sptype */
     private $sptype = 'public';
+    /**@var $requested_attributes array */
     private $requested_attributes = [];
 
     /**
-     * You should use existing (ie. AuthRequest) DOMElement, to which, as children,
-     * will the samlp:Extensions with relevant data be added
+     * Constructor will parse DOMElement containing samlp:Extensions for known attributes (RequestedAttributes, RequestedAttribute and SPType)
      *
-     * @param DOMElement $dom
-     * @param AuthnRequest|null $authnRequest
+     * @param DOMElement|DOMNode $dom
      * @throws InvalidArgumentException
      */
-    public function __construct(DOMelement $dom = null, AuthnRequest $authnRequest = null)
+    public function __construct(?DOMelement $dom = null)
     {
-        if (empty($dom) && empty($authnRequest)) {
-            throw new InvalidArgumentException("You must provide DOMElement to append the data to, or AuthnRequest which will provide the DOMElement for you");
+        if ($dom === null) {
+            return;
         }
-        if (!empty($dom)) {
-            $this->dom = $dom;
+        parent::__construct($dom);
+        $sptype = $dom->getElementsByTagNameNS('http://eidas.europa.eu/saml-extensions', 'SPType');
+        if ($sptype->length > 0) {
+            $this->sptype = $sptype->item(0)->nodeValue;
         }
-        if (!empty($authnRequest)) {
-            $this->dom = $authnRequest->toUnsignedXML();
+        $req_attrs = $dom->getElementsByTagNameNS('http://eidas.europa.eu/saml-extensions', 'RequestedAttribute');
+        for ($counter = 0; $counter < $req_attrs->length; $counter++) {
+            $req_attr = $req_attrs->item($counter);
+            if (!$req_attr->hasAttributes()) {
+                continue;
+            }
+            $a_Name = $req_attr->attributes->getNamedItem('Name');
+            $a_isRequired = $req_attr->attributes->getNamedItem('isRequired') === true;
+            $a_NameFormat = $req_attr->attributes->getNamedItem('NameFormat');
+            if (empty($a_Name)) {
+                continue;
+            }
+            $this->addRequestedAttributeParams($a_Name->nodeValue, $a_NameFormat->nodeValue, $a_isRequired);
         }
-        parent::__construct($this->dom);
-    }
-
-    public function getSPType(): string
-    {
-        return $this->sptype;
-    }
-
-    /**
-     * Allowed values for SPType (Service Provider Type) are "public" and "private",
-     * invalid values will be replaced by default value "public"
-     *
-     * @param string $sptype
-     * @return SamlpExtensions
-     */
-    public function setSPType(string $sptype): SamlpExtensions
-    {
-        $this->sptype = in_array($sptype, ['public', 'private']) ? $sptype : 'public';
-        return $this;
     }
 
     public function addRequestedAttributeParams(string $Name, ?string $NameFormat = self::NAME_FORMAT_URI, bool $isRequired = false, $AttributeValue = null): SamlpExtensions
@@ -157,6 +150,24 @@ class SamlpExtensions extends Chunk
         return $this;
     }
 
+    public function getSPType(): string
+    {
+        return $this->sptype;
+    }
+
+    /**
+     * Allowed values for SPType (Service Provider Type) are "public" and "private",
+     * invalid values will be replaced by default value "public"
+     *
+     * @param string $sptype
+     * @return SamlpExtensions
+     */
+    public function setSPType(string $sptype): SamlpExtensions
+    {
+        $this->sptype = in_array($sptype, ['public', 'private']) ? $sptype : 'public';
+        return $this;
+    }
+
     /**
      * Adds all pre-defined attributes (from ${getAllDefaultAttributes}) to attributes,
      * that should be added into DOMElement later (using ${toXML})
@@ -203,7 +214,7 @@ class SamlpExtensions extends Chunk
     public function toXML(DOMElement $parent = null): DOMElement
     {
         // will throw TypeError on empty or non-compatible $this->dom value
-        $dom = Utils::copyElement($this->dom);
+        $dom = Utils::copyElement($parent);
         $doc = $dom->ownerDocument;
 
         $extensions = $doc->createElementNS('urn:oasis:names:tc:SAML:2.0:protocol', 'samlp:Extensions');
