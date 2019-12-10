@@ -3,7 +3,6 @@
 namespace OMSAML2;
 
 use DOMElement;
-use DOMNode;
 use InvalidArgumentException;
 use OMSAML2\Chunks\EidasRequestedAttribute;
 use OMSAML2\Chunks\EidasRequestedAttributes;
@@ -74,7 +73,7 @@ class SamlpExtensions extends Chunk
     /**
      * Constructor will parse DOMElement containing samlp:Extensions for known attributes (RequestedAttributes, RequestedAttribute and SPType)
      *
-     * @param DOMElement|DOMNode $dom
+     * @param DOMElement $dom
      * @throws InvalidArgumentException
      */
     public function __construct(?DOMelement $dom = null)
@@ -108,10 +107,14 @@ class SamlpExtensions extends Chunk
      */
     public function addRequestedAttribute(array $attribute): SamlpExtensions
     {
+        $requestedAttribute = new EidasRequestedAttribute();
+
         if (empty($attribute['Name'])) {
             throw new InvalidArgumentException("Required attribute Name is missing");
         } else if (!is_string($attribute['Name'])) {
             throw new InvalidArgumentException("Attribute Name must be string");
+        } else {
+            $requestedAttribute->Name = $attribute['Name'];
         }
         if (!empty($attribute['NameFormat']) && !is_string($attribute['NameFormat'])) {
             throw new InvalidArgumentException("Attribute NameFormat must be string");
@@ -119,25 +122,23 @@ class SamlpExtensions extends Chunk
         if (!empty($attribute['isRequired']) && !is_bool($attribute['isRequired'])) {
             throw new InvalidArgumentException("Attribute isRequired must be boolean");
         }
-        if (!empty($attribute['AttributeValue']) && !is_scalar($attribute['AttributeValue'])) {
-            throw new InvalidArgumentException("AttributeValue should be primitive type, such as string, number or boolean");
+        if (!empty($attribute['AttributeValue'])) {
+            if (!is_scalar($attribute['AttributeValue'])) {
+                throw new InvalidArgumentException("AttributeValue should be primitive type, such as string, number or boolean");
+            }
+
+            $requestedAttribute->NodeValue = $attribute['AttributeValue'];
         }
 
         // set default values for not-defined attributes
-        if (empty($attribute['NameFormat'])) {
-            $attribute['NameFormat'] = self::NAME_FORMAT_URI;
+        if (!empty($attribute['NameFormat'])) {
+            $requestedAttribute->NameFormat = $attribute['NameFormat'];
         }
-        if (empty($attribute['isRequired'])) {
-            $attribute['isRequired'] = false;
+        if (!empty($attribute['isRequired'])) {
+            $requestedAttribute->isRequired = $attribute['isRequired'];
         }
 
         // add to queue
-        $requestedAttribute = new EidasRequestedAttribute();
-        $requestedAttribute->Name = $attribute['Name'];
-        $requestedAttribute->NodeValue = isset($attribute['AttributeValue']) ? $attribute['AttributeValue'] : null;
-        $requestedAttribute->NameFormat = $attribute['NameFormat'];
-        $requestedAttribute->isRequired = $attribute['isRequired'];
-
         $this->requested_attributes[] = $requestedAttribute;
 
         // return $this for chaining

@@ -397,7 +397,7 @@ class OMSAML2
 
     /**
      * @param DOMElement $element
-     * @param $base_request_url
+     * @param string $base_request_url
      * @return string
      */
     public static function getSAMLRequestUrl(DOMElement $element, $base_request_url): string
