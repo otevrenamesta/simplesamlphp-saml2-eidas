@@ -10,6 +10,7 @@ class EidasRequestedAttributes extends Chunk
 
     const NS_EIDAS = 'http://eidas.europa.eu/saml-extensions';
     const LOCAL_NAME = 'RequestedAttributes';
+    const QUALIFIED_NAME = 'eidas:' . self::LOCAL_NAME;
     /**@var $requested_attributes EidasRequestedAttribute[] */
     public $requested_attributes = [];
 
@@ -29,7 +30,7 @@ class EidasRequestedAttributes extends Chunk
 
     public function toXML(DOMElement $parent): DOMElement
     {
-        $e = $parent->ownerDocument->createElementNS(self::NS_EIDAS, self::LOCAL_NAME);
+        $e = $parent->ownerDocument->createElementNS(self::NS_EIDAS, self::QUALIFIED_NAME);
         foreach ($this->requested_attributes as $attribute) {
             $attribute->toXML($e);
         }

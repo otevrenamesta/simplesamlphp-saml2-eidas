@@ -11,6 +11,7 @@ class EidasRequestedAttribute extends Chunk
     const NAME_FORMAT_URI = 'urn:oasis:names:tc:SAML:2.0:attrname-format:uri';
     const NS_EIDAS = 'http://eidas.europa.eu/saml-extensions';
     const LOCAL_NAME = 'RequestedAttribute';
+    const QUALIFIED_NAME = 'eidas:' . self::LOCAL_NAME;
 
     public $Name = null;
     public $isRequired = false;
@@ -34,12 +35,13 @@ class EidasRequestedAttribute extends Chunk
 
     public function toXML(DOMElement $parent): DOMElement
     {
-        $e = $parent->ownerDocument->createElementNS(self::NS_EIDAS, self::LOCAL_NAME);
+        $e = $parent->ownerDocument->createElementNS(self::NS_EIDAS, self::QUALIFIED_NAME);
         $e->setAttribute('Name', $this->Name);
         $e->setAttribute('NameFormat', $this->NameFormat);
         $e->setAttribute('isRequired', $this->isRequired);
         if ($this->NodeValue != null) {
-            $val = $e->ownerDocument->createElementNS(self::NS_EIDAS, 'AttributeValue');
+            $val = $e->ownerDocument->createElementNS(self::NS_EIDAS, 'eidas:AttributeValue');
+            // to support boolean values as well
             $val->nodeValue = var_export($this->NodeValue, true);
             $e->appendChild($val);
         }

@@ -67,7 +67,7 @@ DOC;
         $string_output = $toxml->ownerDocument->saveXML($toxml);
 
         // has sptype
-        $this->assertStringContainsString('<eidas:SPType xmlns="http://eidas.europa.eu/saml-extensions">public</eidas:SPType>', $string_output);
+        $this->assertStringContainsString('<eidas:SPType xmlns:eidas="http://eidas.europa.eu/saml-extensions">public</eidas:SPType>', $string_output);
         // has correct number of RequestedAttribute elements of correct namespace
         $this->assertEquals(count($exts->getAllDefaultAttributes()), count($toxml->getElementsByTagNameNS('http://eidas.europa.eu/saml-extensions', 'RequestedAttribute')));
     }
