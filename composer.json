@@ -51,6 +51,7 @@
     "phpstan/phpstan": "^0.12.2"
   },
   "scripts": {
+    "test": "phpunit",
     "phpunit": "phpunit",
     "phpstan": "vendor/bin/phpstan analyse src --level=5"
   }
