@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use OMSAML2\OMSAML2;
+use OMSAML2\SamlpExtensions;
 use PHPUnit\Framework\TestCase;
 use RobRichards\XMLSecLibs\XMLSecurityKey;
 use SAML2\Compat\ContainerSingleton;
@@ -292,7 +293,8 @@ lBIgv8KvQ/v9/0Pag9j6VyVIh+QMGGWFBd4XDcrzOhPzfiGm7cZi
         $this->assertTrue(OMSAML2::validateSignature());
     }
 
-    public function testSetInvalidIdpCertificateData():void {
+    public function testSetInvalidIdpCertificateData(): void
+    {
         OMSAML2::reset();
         $this->assertFalse(OMSAML2::setIdpCertificate(""));
     }
@@ -309,5 +311,39 @@ lBIgv8KvQ/v9/0Pag9j6VyVIh+QMGGWFBd4XDcrzOhPzfiGm7cZi
         $this->assertIsArray($logout_urls);
         $this->assertEmpty($login_urls);
         $this->assertEmpty($logout_urls);
+    }
+
+    public function testReadmeCode(): void
+    {
+        OMSAML2::reset();
+        OMSAML2::setIdPMetadataUrl("https://tnia.eidentita.cz/FPSTS/FederationMetadata/2007-06/FederationMetadata.xml");
+
+        $request = OMSAML2::generateAuthRequest(
+            new MockContainer(),
+            'https://sep.example.com', // SeP issuer value
+            'https://sep.example.com/assertion_consumer_service', // SeP ACS URL, url to redirect user after authentication
+            OMSAML2::extractSSOLoginUrls()[Constants::BINDING_HTTP_REDIRECT], // retrieve SSO redirect url from IdP metadata
+            OMSAML2::LOA_LOW, // require minimal level-of-assurance (LoA), ie. authentication methods, that do not guarantee user identity exists in real world
+            'minimum'
+        );
+
+        // create eIDAS samlp:Extensions with
+        $extensions = new SamlpExtensions();
+        // single RequestedAttribute Name="email" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri" isRequired="false" without AttributeValue
+        $extensions->addRequestedAttributeParams('email');
+        // single RequestedAttribute Name="http://www.stork.gov.eu/1.0/age" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri" isRequired="true" without AttributeValue
+        $extensions->addRequestedAttributeParams('http://www.stork.gov.eu/1.0/age', 'urn:oasis:names:tc:SAML:2.0:attrname-format:uri', true);
+        // you do not have to do this, public is default type of SeP within this library, allowed values are 'public' or 'private'
+        $extensions->setSPType('public');
+
+        $request_unsigned = $extensions->toXML($request->toUnsignedXML());
+        $this->assertNotEmpty($request_unsigned);
+    }
+
+    public function testReadmeCode2():void{
+        OMSAML2::reset();
+
+        OMSAML2::setIdPMetadataUrl("https://tnia.eidentita.cz/FPSTS/FederationMetadata/2007-06/FederationMetadata.xml");
+        $this->assertTrue(OMSAML2::validateSignature(OMSAML2::getPublicKeyFromCertificate("https://nia.otevrenamesta.cz/tnia.crt")));
     }
 }

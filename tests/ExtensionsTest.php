@@ -8,15 +8,6 @@ use SAML2\DOMDocumentFactory;
 
 final class ExtensionsTest extends TestCase
 {
-    static function getDummyDOMElement(): DOMElement
-    {
-        $xmlstring = <<<DOC
-<?xml version="1.0"?>
-<root xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" xmlns:eidas="http://eidas.europa.eu/saml-extensions"></root>
-DOC;
-        return DOMDocumentFactory::fromString($xmlstring)->documentElement;
-    }
-
     public function testDefaultAttributesWork(): void
     {
         $exts = new SamlpExtensions(self::getDummyDOMElement());
@@ -24,6 +15,15 @@ DOC;
         $exts->addAllDefaultAttributes();
         $final_count = count($exts->getRequestedAttributes());
         $this->assertEquals($correct_count, $final_count);
+    }
+
+    static function getDummyDOMElement(): DOMElement
+    {
+        $xmlstring = <<<DOC
+<?xml version="1.0"?>
+<root xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" xmlns:eidas="http://eidas.europa.eu/saml-extensions"></root>
+DOC;
+        return DOMDocumentFactory::fromString($xmlstring)->documentElement;
     }
 
     public function testSPType(): void

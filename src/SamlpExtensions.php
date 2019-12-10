@@ -8,7 +8,6 @@ use InvalidArgumentException;
 use OMSAML2\Chunks\EidasRequestedAttribute;
 use OMSAML2\Chunks\EidasRequestedAttributes;
 use OMSAML2\Chunks\EidasSPType;
-use SAML2\Constants;
 use SAML2\DOMDocumentFactory;
 use SAML2\Utils;
 use SAML2\XML\Chunk;
