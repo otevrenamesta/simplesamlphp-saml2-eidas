@@ -5,6 +5,10 @@ namespace OMSAML2;
 use DOMElement;
 use DOMNode;
 use InvalidArgumentException;
+use OMSAML2\Chunks\EidasRequestedAttribute;
+use OMSAML2\Chunks\EidasRequestedAttributes;
+use OMSAML2\Chunks\EidasSPType;
+use SAML2\Constants;
 use SAML2\DOMDocumentFactory;
 use SAML2\Utils;
 use SAML2\XML\Chunk;
@@ -63,9 +67,9 @@ class SamlpExtensions extends Chunk
         'Name' => 'http://schemas.eidentita.cz/moris/2016/identity/claims/idnumber'
     ];
 
-    /**@var string $sptype */
-    private $sptype = 'public';
-    /**@var $requested_attributes array */
+    /**@var EidasSPType $sptype */
+    private $sptype = null;
+    /**@var $requested_attributes EidasRequestedAttribute[] */
     private $requested_attributes = [];
 
     /**
@@ -77,27 +81,12 @@ class SamlpExtensions extends Chunk
     public function __construct(?DOMelement $dom = null)
     {
         if ($dom === null) {
+            $this->sptype = new EidasSPType();
             return;
         }
         parent::__construct($dom);
-        $sptype = $dom->getElementsByTagNameNS('http://eidas.europa.eu/saml-extensions', 'SPType');
-        if ($sptype->length > 0) {
-            $this->sptype = $sptype->item(0)->nodeValue;
-        }
-        $req_attrs = $dom->getElementsByTagNameNS('http://eidas.europa.eu/saml-extensions', 'RequestedAttribute');
-        for ($counter = 0; $counter < $req_attrs->length; $counter++) {
-            $req_attr = $req_attrs->item($counter);
-            if (!$req_attr->hasAttributes()) {
-                continue;
-            }
-            $a_Name = $req_attr->attributes->getNamedItem('Name');
-            $a_isRequired = $req_attr->attributes->getNamedItem('isRequired') === true;
-            $a_NameFormat = $req_attr->attributes->getNamedItem('NameFormat');
-            if (empty($a_Name)) {
-                continue;
-            }
-            $this->addRequestedAttributeParams($a_Name->nodeValue, $a_NameFormat->nodeValue, $a_isRequired);
-        }
+        $this->sptype = new EidasSPType($dom->getElementsByTagNameNS(EidasSPType::NS_EIDAS, EidasSPType::LOCAL_NAME)->item(0));
+        $this->requested_attributes = (new EidasRequestedAttributes($dom))->requested_attributes;
     }
 
     public function addRequestedAttributeParams(string $Name, ?string $NameFormat = self::NAME_FORMAT_URI, bool $isRequired = false, $AttributeValue = null): SamlpExtensions
@@ -144,7 +133,13 @@ class SamlpExtensions extends Chunk
         }
 
         // add to queue
-        $this->requested_attributes[] = $attribute;
+        $requestedAttribute = new EidasRequestedAttribute();
+        $requestedAttribute->Name = $attribute['Name'];
+        $requestedAttribute->NodeValue = isset($attribute['AttributeValue']) ? $attribute['AttributeValue'] : null;
+        $requestedAttribute->NameFormat = $attribute['NameFormat'];
+        $requestedAttribute->isRequired = $attribute['isRequired'];
+
+        $this->requested_attributes[] = $requestedAttribute;
 
         // return $this for chaining
         return $this;
@@ -152,7 +147,7 @@ class SamlpExtensions extends Chunk
 
     public function getSPType(): string
     {
-        return $this->sptype;
+        return $this->sptype->sptype;
     }
 
     /**
@@ -164,7 +159,7 @@ class SamlpExtensions extends Chunk
      */
     public function setSPType(string $sptype): SamlpExtensions
     {
-        $this->sptype = in_array($sptype, ['public', 'private']) ? $sptype : 'public';
+        $this->sptype->sptype = in_array($sptype, ['public', 'private']) ? $sptype : 'public';
         return $this;
     }
 
@@ -219,27 +214,14 @@ class SamlpExtensions extends Chunk
 
         $extensions = $doc->createElementNS('urn:oasis:names:tc:SAML:2.0:protocol', 'samlp:Extensions');
 
-        // set SPType always
-        $sptype = $doc->createElementNS('http://eidas.europa.eu/saml-extensions', 'eidas:SPType');
-        $sptype->nodeValue = $this->sptype;
-        $extensions->appendChild($sptype);
+        $this->sptype->toXML($extensions);
 
         // set eidas:RequestedAttributes if any defined
         if (!empty($this->getRequestedAttributes())) {
-            $requested_attributes = $doc->createElementNS('http://eidas.europa.eu/saml-extensions', 'eidas:RequestedAttributes');
-            foreach ($this->getRequestedAttributes() as $attrArray) {
-                $attrElement = $doc->createElementNS('http://eidas.europa.eu/saml-extensions', 'eidas:RequestedAttribute');
-                $attrElement->setAttribute('Name', $attrArray['Name']);
-                $attrElement->setAttribute('isRequired', $attrArray['isRequired'] ? 'true' : 'false');
-                $attrElement->setAttribute('NameFormat', $attrArray['NameFormat']);
-                if (isset($attrArray['AttributeValue']) && (!empty($attrArray['AttributeValue']) || $attrArray['AttributeValue'] === false)) {
-                    $attrValueElement = $doc->createElementNS('http://eidas.europa.eu/saml-extensions', 'eidas:AttributeValue');
-                    $attrValueElement->nodeValue = (string)$attrArray['AttributeValue'];
-                    $attrElement->appendChild($attrValueElement);
-                }
-                $requested_attributes->appendChild($attrElement);
-            }
-            $extensions->appendChild($requested_attributes);
+
+            $requested_attributes = new EidasRequestedAttributes();
+            $requested_attributes->requested_attributes = $this->requested_attributes;
+            $requested_attributes->toXML($extensions);
         }
 
         $dom->appendChild($extensions);
@@ -250,7 +232,7 @@ class SamlpExtensions extends Chunk
     /**
      * Return currently queued RequestedAttributes in form of array configuration
      *
-     * @return array
+     * @return EidasRequestedAttribute[]
      */
     public function getRequestedAttributes(): array
     {

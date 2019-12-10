@@ -8,6 +8,15 @@ use SAML2\DOMDocumentFactory;
 
 final class ExtensionsTest extends TestCase
 {
+    static function getDummyDOMElement(): DOMElement
+    {
+        $xmlstring = <<<DOC
+<?xml version="1.0"?>
+<root xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" xmlns:eidas="http://eidas.europa.eu/saml-extensions"></root>
+DOC;
+        return DOMDocumentFactory::fromString($xmlstring)->documentElement;
+    }
+
     public function testDefaultAttributesWork(): void
     {
         $exts = new SamlpExtensions(self::getDummyDOMElement());
@@ -15,15 +24,6 @@ final class ExtensionsTest extends TestCase
         $exts->addAllDefaultAttributes();
         $final_count = count($exts->getRequestedAttributes());
         $this->assertEquals($correct_count, $final_count);
-    }
-
-    static function getDummyDOMElement(): DOMElement
-    {
-        $xmlstring = <<<DOC
-<?xml version="1.0"?>
-<root></root>
-DOC;
-        return DOMDocumentFactory::fromString($xmlstring)->documentElement;
     }
 
     public function testSPType(): void
@@ -67,7 +67,7 @@ DOC;
         $string_output = $toxml->ownerDocument->saveXML($toxml);
 
         // has sptype
-        $this->assertStringContainsString('<eidas:SPType xmlns:eidas="http://eidas.europa.eu/saml-extensions">public</eidas:SPType>', $string_output);
+        $this->assertStringContainsString('<eidas:SPType xmlns="http://eidas.europa.eu/saml-extensions">public</eidas:SPType>', $string_output);
         // has correct number of RequestedAttribute elements of correct namespace
         $this->assertEquals(count($exts->getAllDefaultAttributes()), count($toxml->getElementsByTagNameNS('http://eidas.europa.eu/saml-extensions', 'RequestedAttribute')));
     }
@@ -87,7 +87,8 @@ DOC;
         $exts->addRequestedAttribute($args);
     }
 
-    public function testDOMParserConstructor():void {
+    public function testDOMParserConstructor(): void
+    {
         $xml = <<<EOF
 <?xml version="1.0"?>
 <samlp:AuthnRequest xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" ID="_daae61e2-a5b8-492f-886f-d5ebfca29aa1" Version="2.0" IssueInstant="2019-12-10T11:14:00Z" Destination="https://tnia.eidentita.cz/FPSTS/saml2/basic" AssertionConsumerServiceURL="https://nia.otevrenamesta.cz/ExternalLogin">
@@ -106,7 +107,7 @@ DOC;
     <saml:AuthnContextClassRef>http://eidas.europa.eu/LoA/low</saml:AuthnContextClassRef>
   </samlp:RequestedAuthnContext>
   <samlp:Extensions xmlns:eidas="http://eidas.europa.eu/saml-extensions" id="extensionsTest">
-    <eidas:SPType xmlns:eidas="http://eidas.europa.eu/saml-extensions">public</eidas:SPType>
+    <eidas:SPType xmlns:eidas="http://eidas.europa.eu/saml-extensions">private</eidas:SPType>
     <eidas:RequestedAttributes xmlns:eidas="http://eidas.europa.eu/saml-extensions">
       <eidas:RequestedAttribute Name="http://www.stork.gov.eu/1.0/age" isRequired="false" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"/>
       <eidas:RequestedAttribute Name="http://www.stork.gov.eu/1.0/countryCodeOfBirth" isRequired="false" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"/>
@@ -128,8 +129,8 @@ DOC;
 </samlp:AuthnRequest>
 EOF;
         $dom = DOMDocumentFactory::fromString($xml);
-        $extensions = new SamlpExtensions($dom->getElementsByTagNameNS('urn:oasis:names:tc:SAML:2.0:protocol','Extensions')->item(0));
-        $this->assertEquals($extensions->getSPType(), 'public');
+        $extensions = new SamlpExtensions($dom->firstChild);
+        $this->assertEquals($extensions->getSPType(), 'private');
         $this->assertEquals(13, count($extensions->getRequestedAttributes()));
     }
 
