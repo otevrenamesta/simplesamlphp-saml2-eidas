@@ -206,7 +206,7 @@ class SamlpExtensions extends Chunk
         ];
     }
 
-    public function toXML(DOMElement $parent = null): DOMElement
+    public function toXML(DOMElement $parent): DOMElement
     {
         // will throw TypeError on empty or non-compatible $this->dom value
         $dom = Utils::copyElement($parent);
